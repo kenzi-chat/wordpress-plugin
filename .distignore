@@ -1,0 +1,14 @@
+.distignore
+.gitignore
+.github/
+.php-cs-fixer.cache
+.php-cs-fixer.php
+.phpunit.cache/
+bin/
+composer.json
+composer.lock
+kenzi-chat.zip
+node_modules/
+phpstan.neon
+phpunit.xml
+tests/
