@@ -1,0 +1,57 @@
+/**
+ * Kenzi Chat admin styles.
+ *
+ * Extracted from inline style= attributes in SettingsPage.php to follow
+ * WordPress best practices: external stylesheets can be cached, overridden
+ * by other plugins/themes, and don't require 'unsafe-inline' in CSP headers.
+ *
+ * @package Kenzi\Chat
+ */
+
+/* Connected status indicator (green checkmark + text) */
+.kenzi-status-connected {
+    margin: 0 0 10px;
+    color: #2e7d32;
+}
+
+.kenzi-status-connected .dashicons {
+    color: #2e7d32;
+}
+
+/* Disconnect button — red outline to indicate destructive action */
+.kenzi-btn-disconnect {
+    color: #d63638;
+    border-color: #d63638;
+}
+
+/* Unconnected state — prompt text */
+.kenzi-status-prompt {
+    margin: 0 0 10px;
+}
+
+/* Branded "Connect to Kenzi" CTA button */
+.kenzi-btn-connect {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background-color: #358d8d;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    line-height: 1;
+}
+
+.kenzi-btn-connect:hover {
+    background-color: #2d7a7a;
+    box-shadow: 0 4px 12px rgba(53, 141, 141, 0.25);
+}
+
+/* Widget disabled warning text (red) */
+.kenzi-widget-disabled-hint {
+    color: #d63638;
+}

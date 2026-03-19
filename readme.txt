@@ -1,7 +1,7 @@
 === Kenzi Chat ===
 Contributors: kenzichat
 Tags: customer messaging, live chat, support, widget
-Requires at least: 6.0
+Requires at least: 6.3
 Tested up to: 6.7
 Requires PHP: 8.1
 Stable tag: 1.0.0
@@ -37,7 +37,16 @@ Go to Settings > Kenzi Chat and click "Connect to Kenzi". A popup will open wher
 
 = How do I change the Kenzi server URL for development? =
 
-In the Developer Tools section of the settings page, update the Base URL field to point to your local or staging server.
+Set the `KENZI_APP_BASE` and `KENZI_STATIC_BASE` environment variables to point to your local or staging server. For internal development, source the shared `kenzi.sh` env file before starting your WordPress dev server so PHP can read the values via `getenv()`:
+
+`source /path/to/kenzi.sh && wp server --port=8080`
+
+The env file should export at minimum:
+
+`export KENZI_APP_BASE="http://localhost:4000"`
+`export KENZI_STATIC_BASE="http://localhost:4000"`
+
+Without these, the plugin falls back to the production URLs (`https://app.kenzi.chat` and `https://static.kenzi.chat`).
 
 == Changelog ==
 

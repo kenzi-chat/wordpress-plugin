@@ -30,6 +30,16 @@ final class Plugin
     {
     }
 
+    // Prevent cloning and unserialization of the singleton.
+    private function __clone()
+    {
+    }
+
+    public function __wakeup(): void
+    {
+        throw new \RuntimeException('Cannot unserialize singleton');
+    }
+
     /**
      * Initialize the plugin.
      *
@@ -44,17 +54,23 @@ final class Plugin
     }
 
     /**
-     * Register admin settings page.
+     * Register admin settings page and form handler.
      */
     private function registerSettings(): void
     {
-        add_action('admin_menu', static function (): void {
-            (new Admin\SettingsPage())->register();
-        });
+        $settingsPage = new Admin\SettingsPage();
+
+        add_action('admin_menu', [$settingsPage, 'register']);
+
+        // handleSave must run on admin_init (fires before admin_menu).
+        add_action('admin_init', [$settingsPage, 'handleSave']);
+
+        // Enqueue admin JS/CSS only on the Kenzi Chat settings page.
+        add_action('admin_enqueue_scripts', [$settingsPage, 'enqueueAdminAssets']);
     }
 
     /**
-     * Register AJAX handlers for connection save/reset.
+     * Register AJAX handlers for connection save and disconnect.
      */
     private function registerAjaxHandlers(): void
     {
@@ -62,11 +78,11 @@ final class Plugin
     }
 
     /**
-     * Register widget script injection on frontend.
+     * Register widget script injection on frontend pages.
      */
     private function registerWidgetInjection(): void
     {
-        add_action('wp_footer', [$this, 'injectWidget']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueWidget']);
     }
 
     /**
@@ -87,16 +103,10 @@ final class Plugin
     }
 
     /**
-     * Inject the Kenzi widget script into frontend pages.
-     *
-     * Only injects if widget is enabled and widget URL is configured.
+     * Enqueue the Kenzi widget loader script on frontend pages.
      */
-    public function injectWidget(): void
+    public function enqueueWidget(): void
     {
-        if (is_admin()) {
-            return;
-        }
-
         if (! Settings::isWidgetEnabled()) {
             return;
         }
@@ -107,12 +117,12 @@ final class Plugin
             return;
         }
 
-        echo '<script src="' . esc_url($widgetUrl) . '"></script>' . "\n";
+        wp_enqueue_script(
+            'kenzi-widget',
+            $widgetUrl,
+            [],
+            KENZI_CHAT_VERSION,
+            ['in_footer' => true, 'strategy' => 'defer'],
+        );
     }
-
-    // TODO: Webhook support
-    // public function removeWebhooks(): void
-    // {
-    //     // Remove registered webhooks on plugin deactivation
-    // }
 }

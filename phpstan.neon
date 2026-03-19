@@ -3,4 +3,5 @@ parameters:
     phpVersion: 80100
     paths:
         - kenzi-chat.php
+        - uninstall.php
         - src

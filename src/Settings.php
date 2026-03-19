@@ -6,79 +6,52 @@ namespace Kenzi\Chat;
 
 /**
  * Settings helper for Kenzi Chat plugin options.
+ *
+ * Each setting is stored as an individual wp_option row, following core
+ * WordPress convention (e.g. blogname, siteurl, admin_email).
  */
 final class Settings
 {
-    public const OPTION_NAME = 'kenzi_chat_settings';
-    public const BASE_URL_OPTION = 'kenzi_base_url';
+    public const OPTION_WORKSPACE_ID = 'kenzi_workspace_id';
+    public const OPTION_SECRET = 'kenzi_shared_secret';
+    public const OPTION_INTEGRATION_ID = 'kenzi_integration_id';
+    public const OPTION_WIDGET_ENABLED = 'kenzi_widget_enabled';
     public const CAPABILITIES_OPTION = 'kenzi_capabilities';
-    public const DEFAULT_BASE_URL = 'https://app.kenzi.chat';
+    public const DEFAULT_APP_BASE = 'https://app.kenzi.chat';
+    public const DEFAULT_STATIC_BASE = 'https://static.kenzi.chat';
 
     /**
-     * Get all settings with defaults.
+     * Get the Kenzi app base URL (connect flow, API calls, webhooks).
      *
-     * @return array{
-     *     workspace_id: string,
-     *     workspace_name: string,
-     *     kenzi_secret: string,
-     *     integration_id: string,
-     *     widget_enabled: bool
-     * }
+     * Reads from the KENZI_APP_BASE environment variable, falling back
+     * to production. Set the env var for local development.
      */
-    public static function get(): array
+    public static function getAppBase(): string
     {
-        $defaults = [
-            'workspace_id' => '',
-            'workspace_name' => '',
-            'kenzi_secret' => '',
-            'integration_id' => '',
-            'widget_enabled' => false,
-        ];
+        $env = getenv('KENZI_APP_BASE');
 
-        /** @var array<string, mixed> $options */
-        $options = get_option(self::OPTION_NAME, []);
-
-        return array_merge($defaults, $options);
+        return is_string($env) && $env !== '' ? $env : self::DEFAULT_APP_BASE;
     }
 
     /**
-     * Get the Kenzi base URL (for connect flow, postMessage validation, and widget).
+     * Get the Kenzi static base URL (widget assets).
+     *
+     * Reads from the KENZI_STATIC_BASE environment variable, falling back
+     * to production.
      */
-    public static function getBaseUrl(): string
+    public static function getStaticBase(): string
     {
-        $url = get_option(self::BASE_URL_OPTION, '');
+        $env = getenv('KENZI_STATIC_BASE');
 
-        return is_string($url) && $url !== '' ? $url : self::DEFAULT_BASE_URL;
+        return is_string($env) && $env !== '' ? $env : self::DEFAULT_STATIC_BASE;
     }
 
     /**
-     * Set the Kenzi base URL.
-     */
-    public static function setBaseUrl(string $url): void
-    {
-        $url = trim($url);
-
-        if ($url === '' || $url === self::DEFAULT_BASE_URL) {
-            delete_option(self::BASE_URL_OPTION);
-        } else {
-            update_option(self::BASE_URL_OPTION, $url);
-        }
-    }
-
-    /**
-     * Get the full connect URL for OAuth popup.
+     * Get the Kenzi Connect popup URL.
      */
     public static function getConnectUrl(): string
     {
-        return rtrim(self::getBaseUrl(), '/') . '/connect/workspaces';
-    }
-
-    /**
-     * Get the full upgrade URL for commerce capability popup.
-     */
-    public static function getUpgradeUrl(): string
-    {
-        return rtrim(self::getBaseUrl(), '/') . '/connect/upgrade';
+        return rtrim(self::getAppBase(), '/') . '/connect';
     }
 
     /**
@@ -86,9 +59,7 @@ final class Settings
      */
     public static function isConnected(): bool
     {
-        $options = self::get();
-
-        return $options['workspace_id'] !== '';
+        return (bool) get_option(self::OPTION_WORKSPACE_ID);
     }
 
     /**
@@ -96,55 +67,37 @@ final class Settings
      */
     public static function isWidgetEnabled(): bool
     {
-        $options = self::get();
-
-        return self::isConnected() && ! empty($options['widget_enabled']);
+        return self::isConnected() && (bool) get_option(self::OPTION_WIDGET_ENABLED);
     }
 
     /**
-     * Get the widget loader URL, derived from base URL + workspace ID.
-     *
-     * Returns null if not connected.
+     * Get the widget loader URL for the connected workspace.
      */
     public static function getWidgetUrl(): ?string
     {
-        if (! self::isConnected()) {
+        $workspaceId = get_option(self::OPTION_WORKSPACE_ID);
+
+        if (! $workspaceId) {
             return null;
         }
 
-        $options = self::get();
-
-        return rtrim(self::getBaseUrl(), '/') . '/widget/loader.js?w=' . urlencode($options['workspace_id']);
+        return rtrim(self::getStaticBase(), '/') . '/widget/loader.js?w=' . urlencode($workspaceId);
     }
 
     /**
-     * Get the workspace display name.
+     * Get the shared secret for webhook HMAC verification and API auth.
      */
-    public static function getWorkspaceDisplay(): string
+    public static function getSharedSecret(): ?string
     {
-        $options = self::get();
-
-        return $options['workspace_name'] !== '' ? $options['workspace_name'] : $options['workspace_id'];
+        return get_option(self::OPTION_SECRET) ?: null;
     }
 
     /**
-     * Get the kenzi secret (for webhook verification and capability upgrade API).
+     * Get the integration ID for API calls to the Kenzi backend.
      */
-    public static function getKenziSecret(): string
+    public static function getIntegration(): ?string
     {
-        $options = self::get();
-
-        return $options['kenzi_secret'];
-    }
-
-    /**
-     * Get the integration ID (numeric ID used for API calls to the Kenzi backend).
-     */
-    public static function getIntegrationId(): string
-    {
-        $options = self::get();
-
-        return $options['integration_id'];
+        return get_option(self::OPTION_INTEGRATION_ID) ?: null;
     }
 
     /**
@@ -154,13 +107,13 @@ final class Settings
      */
     public static function getCapabilities(): array
     {
-        $raw = get_option(self::CAPABILITIES_OPTION, '');
+        $raw = get_option(self::CAPABILITIES_OPTION);
 
         if (! is_string($raw) || $raw === '') {
             return [];
         }
 
-        return array_filter(array_map('trim', explode(',', $raw)));
+        return array_values(array_filter(array_map('trim', explode(',', $raw))));
     }
 
     /**
@@ -192,6 +145,11 @@ final class Settings
      */
     public static function detectCapabilities(): array
     {
+        // is_plugin_active() is only available in admin context.
+        if (! function_exists('is_plugin_active')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
         $capabilities = [];
 
         if (is_plugin_active('kenzi-commerce/kenzi-commerce.php')) {
@@ -208,16 +166,10 @@ final class Settings
      */
     public static function saveConnection(array $data): void
     {
-        $options = self::get();
+        update_option(self::OPTION_WORKSPACE_ID, $data['workspace_id'], false);
+        update_option(self::OPTION_SECRET, $data['secret'], false);
+        update_option(self::OPTION_INTEGRATION_ID, $data['integration_id'], false);
 
-        $options['workspace_id'] = sanitize_text_field($data['workspace_id'] ?? '');
-        $options['workspace_name'] = sanitize_text_field($data['workspace_name'] ?? '');
-        $options['kenzi_secret'] = sanitize_text_field($data['secret'] ?? '');
-        $options['integration_id'] = sanitize_text_field($data['integration_id'] ?? '');
-
-        update_option(self::OPTION_NAME, $options);
-
-        // Store detected capabilities at connection time
         self::setCapabilities(self::detectCapabilities());
     }
 
@@ -226,32 +178,18 @@ final class Settings
      */
     public static function setWidgetEnabled(bool $enabled): void
     {
-        $options = self::get();
-
-        // Can only enable if connected
-        $options['widget_enabled'] = self::isConnected() && $enabled;
-
-        update_option(self::OPTION_NAME, $options);
+        update_option(self::OPTION_WIDGET_ENABLED, self::isConnected() && $enabled ? '1' : '', false);
     }
 
     /**
      * Clear connection data (disconnect workspace).
-     *
-     * Preserves developer settings like base URL.
      */
     public static function disconnect(): void
     {
-        delete_option(self::OPTION_NAME);
-        delete_option(self::CAPABILITIES_OPTION);
-    }
-
-    /**
-     * Reset all settings including developer options.
-     */
-    public static function reset(): void
-    {
-        delete_option(self::OPTION_NAME);
-        delete_option(self::BASE_URL_OPTION);
+        delete_option(self::OPTION_WORKSPACE_ID);
+        delete_option(self::OPTION_SECRET);
+        delete_option(self::OPTION_INTEGRATION_ID);
+        delete_option(self::OPTION_WIDGET_ENABLED);
         delete_option(self::CAPABILITIES_OPTION);
     }
 }

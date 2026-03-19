@@ -10,7 +10,7 @@
  * License:     GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: kenzi-chat
- * Requires at least: 6.0
+ * Requires at least: 6.3
  * Requires PHP: 8.1
  *
  * @package Kenzi\Chat
@@ -22,7 +22,6 @@ defined('ABSPATH') || exit;
 
 define('KENZI_CHAT_VERSION', '1.0.0');
 define('KENZI_CHAT_PLUGIN_FILE', __FILE__);
-define('KENZI_CHAT_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -32,7 +31,6 @@ add_action('plugins_loaded', static function (): void {
     Plugin::instance()->init();
 });
 
-// TODO: Webhook support
-// register_deactivation_hook(__FILE__, static function (): void {
-//     Plugin::instance()->removeWebhooks();
-// });
+register_deactivation_hook(__FILE__, static function (): void {
+    delete_transient('kenzi_chat_notice');
+});
