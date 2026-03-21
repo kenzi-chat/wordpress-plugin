@@ -12,7 +12,7 @@ use Kenzi\Chat\Settings;
  * Registers a top-level admin menu page for Kenzi Chat using
  * WordPress's native admin menu API.
  */
-class SettingsPage
+final class SettingsPage
 {
     private const PAGE_SLUG = 'kenzi-chat';
 

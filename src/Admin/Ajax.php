@@ -26,20 +26,22 @@ final class Ajax
     public static function saveConnection(): void
     {
         if (! current_user_can('manage_options')) {
-            wp_send_json_error(esc_html__('Unauthorized', 'kenzi-chat'));
+            wp_send_json_error(__('Unauthorized', 'kenzi-chat'));
+            return;
         }
 
         if (! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'] ?? '')), 'kenzi_save_connection')) {
-            wp_send_json_error(esc_html__('Invalid nonce', 'kenzi-chat'));
+            wp_send_json_error(__('Invalid nonce', 'kenzi-chat'));
+            return;
         }
         Settings::saveConnection([
-            'workspace_id' => wp_unslash($_POST['workspace_id'] ?? ''),
-            'secret' => wp_unslash($_POST['secret'] ?? ''),
-            'integration_id' => wp_unslash($_POST['integration_id'] ?? ''),
+            'workspace_id' => sanitize_text_field(wp_unslash($_POST['workspace_id'] ?? '')),
+            'secret' => sanitize_text_field(wp_unslash($_POST['secret'] ?? '')),
+            'integration_id' => sanitize_text_field(wp_unslash($_POST['integration_id'] ?? '')),
         ]);
 
         // Workspace name is only used in the success notice, not persisted.
-        $workspaceName = wp_unslash($_POST['workspace_name'] ?? '');
+        $workspaceName = sanitize_text_field(wp_unslash($_POST['workspace_name'] ?? ''));
         set_transient('kenzi_chat_notice', 'connected', 30);
         if ($workspaceName !== '') {
             set_transient('kenzi_chat_connected_name', $workspaceName, 30);
@@ -88,18 +90,23 @@ final class Ajax
     public static function disconnect(): void
     {
         if (! current_user_can('manage_options')) {
-            wp_send_json_error(esc_html__('Unauthorized', 'kenzi-chat'));
+            wp_send_json_error(__('Unauthorized', 'kenzi-chat'));
+            return;
         }
 
         if (! wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'] ?? '')), 'kenzi_disconnect')) {
-            wp_send_json_error(esc_html__('Invalid nonce', 'kenzi-chat'));
+            wp_send_json_error(__('Invalid nonce', 'kenzi-chat'));
+            return;
         }
 
-        if (! self::notifyBackendDisconnect()) {
-            wp_send_json_error(esc_html__('Failed to disconnect from Kenzi', 'kenzi-chat'));
-        }
+        $backendNotified = self::notifyBackendDisconnect();
 
         Settings::disconnect();
+
+        if (! $backendNotified) {
+            wp_send_json_success(['warning' => __('Disconnected locally, but failed to notify Kenzi', 'kenzi-chat')]);
+            return;
+        }
 
         wp_send_json_success();
     }
