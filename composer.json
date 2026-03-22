@@ -1,5 +1,5 @@
 {
-    "name": "kenzi/kenzi-chat",
+    "name": "kenzi-chat/wordpress-plugin",
     "description": "Add the Kenzi chat widget to your WordPress site for customer messaging.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
