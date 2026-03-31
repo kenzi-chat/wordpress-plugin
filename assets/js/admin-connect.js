@@ -39,9 +39,10 @@
 
     const params = {
       platform: "wordpress",
-      instance_key: config.storeUrl,
+      instance_key: config.instanceKey,
       origin: config.storeUrl,
       nonce: currentNonce,
+      api_url: config.storeUrl,
       admin_url: config.adminUrl,
     };
 
