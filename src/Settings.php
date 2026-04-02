@@ -139,6 +139,17 @@ final class Settings
     }
 
     /**
+     * Derive the instance key from the site's home URL.
+     *
+     * Strips scheme and trailing slashes to produce a stable identity
+     * (e.g., "mystore.com" or "example.com/store2").
+     */
+    public static function getInstanceKey(): string
+    {
+        return preg_replace('#^https?://#', '', rtrim(home_url(), '/'));
+    }
+
+    /**
      * Detect platform capabilities based on installed plugins.
      *
      * @return list<string>
