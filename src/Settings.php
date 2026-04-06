@@ -205,5 +205,13 @@ final class Settings
         delete_option(self::OPTION_INTEGRATION_ID);
         delete_option(self::OPTION_WIDGET_ENABLED);
         delete_option(self::CAPABILITIES_OPTION);
+
+        /**
+         * Fires after Kenzi Chat has cleared its connection options.
+         *
+         * Add-on plugins (e.g. Kenzi Commerce) hook into this to clean up
+         * their own resources — webhooks, API keys, etc.
+         */
+        do_action('kenzi_chat_disconnected');
     }
 }
