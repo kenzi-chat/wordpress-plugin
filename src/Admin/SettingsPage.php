@@ -83,14 +83,17 @@ final class SettingsPage
             ['in_footer' => true],
         );
 
+        $capabilities = Settings::detectCapabilities();
+
         wp_localize_script('kenzi-chat-admin', 'kenziChatAdmin', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'connectUrl' => Settings::getConnectUrl(),
             'storeUrl' => home_url(),
+            'apiUrl' => in_array('commerce', $capabilities, true) ? rest_url('wc/v3') : home_url(),
             'instanceKey' => Settings::getInstanceKey(),
             'adminUrl' => admin_url(),
             'settingsUrl' => admin_url('admin.php?page=' . self::PAGE_SLUG),
-            'capabilities' => Settings::detectCapabilities(),
+            'capabilities' => $capabilities,
             'nonces' => [
                 'save' => wp_create_nonce('kenzi_save_connection'),
                 'disconnect' => wp_create_nonce('kenzi_disconnect'),
