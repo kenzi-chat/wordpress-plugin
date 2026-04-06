@@ -131,17 +131,23 @@
       currentNonce = null;
 
       // Save the connection credentials via AJAX.
+      const params = {
+        action: "kenzi_save_connection",
+        _wpnonce: config.nonces.save,
+        workspace_id: event.data.workspace_id || "",
+        workspace_name: event.data.workspace_name || "",
+        secret: event.data.shared_secret || "",
+        integration_id: String(event.data.integration_id || ""),
+      };
+
+      if (Array.isArray(event.data.capabilities)) {
+        params.capabilities = event.data.capabilities.join(",");
+      }
+
       fetch(config.ajaxUrl, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          action: "kenzi_save_connection",
-          _wpnonce: config.nonces.save,
-          workspace_id: event.data.workspace_id || "",
-          workspace_name: event.data.workspace_name || "",
-          secret: event.data.shared_secret || "",
-          integration_id: String(event.data.integration_id || ""),
-        }),
+        body: new URLSearchParams(params),
       })
         .then((r) => r.json())
         .then((result) => {

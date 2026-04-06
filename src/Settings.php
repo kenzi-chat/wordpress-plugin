@@ -181,7 +181,10 @@ final class Settings
         update_option(self::OPTION_SECRET, $data['secret'], false);
         update_option(self::OPTION_INTEGRATION_ID, $data['integration_id'], false);
 
-        self::setCapabilities(self::detectCapabilities());
+        // Use the capabilities confirmed by the user in the Connect popup, not auto-detected from
+        // installed plugins. This respects the user's choice to disable a capability even when
+        // its plugin is active.
+        self::setCapabilities($data['capabilities'] ?? []);
     }
 
     /**

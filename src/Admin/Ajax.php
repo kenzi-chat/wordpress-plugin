@@ -34,10 +34,16 @@ final class Ajax
             wp_send_json_error(__('Invalid nonce', 'kenzi-chat'));
             return;
         }
+        $capabilitiesRaw = sanitize_text_field(wp_unslash($_POST['capabilities'] ?? ''));
+        $allowed = ['commerce'];
+        $capabilities = $capabilitiesRaw !== ''
+            ? array_values(array_intersect(array_map('trim', explode(',', $capabilitiesRaw)), $allowed))
+            : [];
         Settings::saveConnection([
             'workspace_id' => sanitize_text_field(wp_unslash($_POST['workspace_id'] ?? '')),
             'secret' => sanitize_text_field(wp_unslash($_POST['secret'] ?? '')),
             'integration_id' => sanitize_text_field(wp_unslash($_POST['integration_id'] ?? '')),
+            'capabilities' => $capabilities,
         ]);
 
         // Workspace name is only used in the success notice, not persisted.
