@@ -46,9 +46,11 @@
       admin_url: config.adminUrl,
     };
 
-    // Include detected capabilities so the backend provisions accordingly.
+    // Include detected capabilities so the backend knows what to request
+    // in the consent screen. The user's actual grant is returned in the
+    // postMessage payload and is independent of what we request here.
     if (config.capabilities && config.capabilities.length > 0) {
-      params.capabilities = config.capabilities.join(",");
+      params.requested_capabilities = config.capabilities.join(",");
     }
 
     const connectUrl = config.connectUrl + "?" + new URLSearchParams(params);
