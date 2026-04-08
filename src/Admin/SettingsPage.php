@@ -89,7 +89,7 @@ final class SettingsPage
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'connectUrl' => Settings::getConnectUrl(),
             'storeUrl' => home_url(),
-            'apiUrl' => in_array('commerce', $capabilities, true) ? rest_url('wc/v3') : home_url(),
+            'apiUrl' => rest_url('wc/v3'),
             'instanceKey' => Settings::getInstanceKey(),
             'adminUrl' => admin_url(),
             'settingsUrl' => admin_url('admin.php?page=' . self::PAGE_SLUG),
