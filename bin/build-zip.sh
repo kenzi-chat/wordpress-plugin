@@ -22,7 +22,7 @@ mkdir -p "$DEST"
 
 # Copy production files
 cp -r src assets "$DEST/"
-cp kenzi-chat.php uninstall.php readme.txt LICENSE composer.json "$DEST/"
+cp kenzi-chat.php readme.txt LICENSE composer.json "$DEST/"
 
 # Install production autoloader (no dev dependencies)
 composer install --no-dev --optimize-autoloader --no-interaction --quiet --working-dir="$DEST"
