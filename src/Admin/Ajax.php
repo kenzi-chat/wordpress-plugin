@@ -72,7 +72,7 @@ final class Ajax
             return true;
         }
 
-        $url = rtrim($baseUrl, '/') . '/api/accounts/integrations/' . urlencode($integrationId) . '/disconnect';
+        $url = rtrim($baseUrl, '/') . '/api/integrations/wordpress/' . urlencode(Settings::getInstanceKey()) . '/disconnect';
 
         $response = wp_remote_request($url, [
             'method' => 'PATCH',
