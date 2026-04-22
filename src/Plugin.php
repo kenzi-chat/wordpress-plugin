@@ -100,6 +100,16 @@ final class Plugin
 
             return $links;
         });
+
+        add_filter('plugin_row_meta', static function (array $meta, string $file) use ($pluginBasename): array {
+            if ($file !== $pluginBasename) {
+                return $meta;
+            }
+
+            $meta[] = '<a href="' . esc_url('https://wiki.kenzi.chat/integrations/wordpress/') . '">' . __('Docs', 'kenzi-chat') . '</a>';
+
+            return $meta;
+        }, 10, 2);
     }
 
     /**

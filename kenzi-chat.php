@@ -2,7 +2,6 @@
 
 /**
  * Plugin Name: Kenzi Chat
- * Plugin URI:  https://kenzi.chat
  * Description: Add the Kenzi chat widget to your WordPress site for customer messaging.
  * Version:     1.0.0
  * Author:      Kenzi
