@@ -9,8 +9,8 @@ use Kenzi\Chat\Settings;
 /**
  * Admin settings page for Kenzi Chat.
  *
- * Registers a top-level admin menu page for Kenzi Chat using
- * WordPress's native admin menu API.
+ * The connection section is rendered client-side from a live
+ * GET /kenzi/integration call — see admin-connect.js and §9.
  */
 final class SettingsPage
 {
@@ -83,30 +83,32 @@ final class SettingsPage
             ['in_footer' => true],
         );
 
-        $capabilities = Settings::detectCapabilities();
+        $supportedGrants = Settings::detectGrants();
 
         wp_localize_script('kenzi-chat-admin', 'kenziChatAdmin', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
             'connectUrl' => Settings::getConnectUrl(),
-            'storeUrl' => home_url(),
-            'apiUrl' => rest_url('wc/v3'),
+            'restBase' => rtrim(rest_url(), '/'),
+            'restNonce' => wp_create_nonce('wp_rest'),
             'instanceKey' => Settings::getInstanceKey(),
-            'adminUrl' => admin_url(),
+            'platformType' => 'wordpress',
+            'supportedGrants' => implode(',', $supportedGrants),
             'settingsUrl' => admin_url('admin.php?page=' . self::PAGE_SLUG),
-            'capabilities' => $capabilities,
-            'nonces' => [
-                'save' => wp_create_nonce('kenzi_save_connection'),
-                'disconnect' => wp_create_nonce('kenzi_disconnect'),
-            ],
-            // Translatable strings for the connect/disconnect popup flow.
+            'isConnected' => Settings::isConnected(),
+            'hasWooCommerce' => in_array('commerce', $supportedGrants, true),
             'i18n' => [
                 'popupBlocked' => __('Popup was blocked. Please allow popups for this site.', 'kenzi-chat'),
                 'confirmDisconnect' => __('Disconnect from Kenzi? This will remove the workspace connection.', 'kenzi-chat'),
-                'securityFailed' => __('Security validation failed. Please try again.', 'kenzi-chat'),
-                'disconnectFailed' => __('Disconnect failed:', 'kenzi-chat'),
-                'disconnectFailedRetry' => __('Disconnect failed. Please try again.', 'kenzi-chat'),
-                'saveFailed' => __('Failed to save connection:', 'kenzi-chat'),
-                'saveFailedRetry' => __('Failed to save connection. Please try again.', 'kenzi-chat'),
+                'disconnectFailed' => __('Disconnect failed. Please try again.', 'kenzi-chat'),
+                'somethingWrong' => __('Something went wrong with your Kenzi connection.', 'kenzi-chat'),
+                'disconnect' => __('Disconnect', 'kenzi-chat'),
+                'connecting' => __('Connecting…', 'kenzi-chat'),
+                'connectPrompt' => __('Connect your site to a Kenzi workspace to enable chat.', 'kenzi-chat'),
+                'connectButton' => __('Connect to Kenzi', 'kenzi-chat'),
+                'connectedTo' => __('Connected to %s', 'kenzi-chat'),
+                'unknownStatus' => __('Kenzi reports status: %s. See documentation.', 'kenzi-chat'),
+                'enableCommerce' => __('Enable Commerce', 'kenzi-chat'),
+                'unreachable' => __('Could not reach Kenzi. Please try again later.', 'kenzi-chat'),
+                'connectionReset' => __('Your Kenzi connection was reset. Please reconnect.', 'kenzi-chat'),
             ],
         ]);
     }
@@ -125,12 +127,8 @@ final class SettingsPage
 
         // Transient-based notices — deleted after first read to prevent stale display.
         $notice = get_transient('kenzi_chat_notice');
-        $connectedName = get_transient('kenzi_chat_connected_name');
         if ($notice !== false) {
             delete_transient('kenzi_chat_notice');
-        }
-        if ($connectedName !== false) {
-            delete_transient('kenzi_chat_connected_name');
         }
 
         ?>
@@ -143,52 +141,14 @@ final class SettingsPage
                 </div>
             <?php endif; ?>
 
-            <?php if ($notice === 'connected'): ?>
-                <div class="notice notice-success is-dismissible">
-                    <p>
-                        <?php if ($connectedName): ?>
-                            <?php
-                            printf(
-                                /* translators: %s: workspace name */
-                                esc_html__('Successfully connected to %s!', 'kenzi-chat'),
-                                '<strong>' . esc_html($connectedName) . '</strong>'
-                            );
-                            ?>
-                        <?php else: ?>
-                            <?php esc_html_e('Successfully connected to Kenzi!', 'kenzi-chat'); ?>
-                        <?php endif; ?>
-                    </p>
-                </div>
-            <?php endif; ?>
-
             <h2><?php esc_html_e('Connection', 'kenzi-chat'); ?></h2>
             <table class="form-table">
                 <tr>
                     <th scope="row"><?php esc_html_e('Workspace', 'kenzi-chat'); ?></th>
                     <td>
-                        <?php if ($isConnected): ?>
-                            <p class="kenzi-status-connected">
-                                <span class="dashicons dashicons-yes-alt"></span>
-                                <?php esc_html_e('Connected', 'kenzi-chat'); ?>
-                            </p>
-                            <button type="button" class="button" onclick="kenziConnect()">
-                                <?php esc_html_e('Reconnect', 'kenzi-chat'); ?>
-                            </button>
-                            <button type="button" class="button kenzi-btn-disconnect" onclick="kenziDisconnect()">
-                                <?php esc_html_e('Disconnect', 'kenzi-chat'); ?>
-                            </button>
-                        <?php else: ?>
-                            <p class="kenzi-status-prompt">
-                                <?php esc_html_e('Connect your site to a Kenzi workspace to enable chat.', 'kenzi-chat'); ?>
-                            </p>
-                            <button type="button" onclick="kenziConnect()" class="kenzi-btn-connect">
-                                <svg width="22" height="22" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="120" cy="120" r="110" fill="#6cb7b7"/>
-                                    <path d="M155.8,72.56c-9.96-11.74-25.65-18.33-42.32-18.33-31.53,0-57.5,25.97-57.5,57.5s25.97,57.5,57.5,57.5c11.23,0,22.04-3.34,31.3-9.56,2.17-1.44,2.71-4.45,1.26-6.62-1.44-2.17-4.45-2.71-6.62-1.26-7.56,5.06-16.39,7.78-25.54,7.78-25.18,0-45.64-20.45-45.64-45.64s20.45-45.64,45.64-45.64c13.47,0,26.3,5.57,34.26,14.95,6.45,7.63,9.17,17.19,7.61,26.98-.12.92-3.17,22.41-28.1,22.41-4.1,0-7.35-1.48-9.96-4.52-3.44-3.94-4.95-9.55-5.17-14.57,21.42-2.68,30.03-16.53,30.43-17.19,1.48-2.48.72-5.76-1.76-7.24-2.48-1.48-5.73-.73-7.2,1.76-.3.48-6.85,10.53-23.64,12.29l8.5-18.4c1.22-2.66.06-5.79-2.6-7.01-2.66-1.22-5.8-.06-7.02,2.6l-24.35,52.84c-1.22,2.66-.06,5.79,2.6,7.01.72.33,1.48.49,2.22.49,2,.0,3.92-1.15,4.82-3.08l8.14-17.68c1.02,5.27,3.18,10.7,7.04,15.18,4.64,5.38,10.87,8.22,18.02,8.22,27.25,0,37.18-20.62,38.63-31.6,2.05-12.83-1.49-25.37-10-35.39Z" fill="#ece8e0"/>
-                                </svg>
-                                <span><?php esc_html_e('Connect to Kenzi', 'kenzi-chat'); ?></span>
-                            </button>
-                        <?php endif; ?>
+                        <div id="kenzi-connection">
+                            <p class="description"><?php esc_html_e('Loading…', 'kenzi-chat'); ?></p>
+                        </div>
                     </td>
                 </tr>
             </table>

@@ -9,7 +9,7 @@ namespace Kenzi\Chat;
  *
  * Singleton that orchestrates all plugin functionality:
  * - Admin settings page registration
- * - AJAX handler registration
+ * - REST API route registration
  * - Widget script injection
  * - Plugin action links
  */
@@ -48,7 +48,7 @@ final class Plugin
     public function init(): void
     {
         $this->registerSettings();
-        $this->registerAjaxHandlers();
+        $this->registerRestRoutes();
         $this->registerWidgetInjection();
         $this->registerPluginLinks();
     }
@@ -70,11 +70,11 @@ final class Plugin
     }
 
     /**
-     * Register AJAX handlers for connection save and disconnect.
+     * Register REST API routes for connect, integration, configure, and disconnect.
      */
-    private function registerAjaxHandlers(): void
+    private function registerRestRoutes(): void
     {
-        Admin\Ajax::register();
+        add_action('rest_api_init', [Admin\RestController::class, 'register']);
     }
 
     /**
@@ -94,7 +94,7 @@ final class Plugin
 
         add_filter('plugin_action_links_' . $pluginBasename, static function (array $links): array {
             $settingsUrl = admin_url('admin.php?page=kenzi-chat');
-            $settingsLink = '<a href="' . esc_url($settingsUrl) . '">' . __('Settings', 'kenzi-chat') . '</a>';
+            $settingsLink = '<a href="' . esc_url($settingsUrl) . '">' . esc_html__('Settings', 'kenzi-chat') . '</a>';
 
             array_unshift($links, $settingsLink);
 
@@ -106,7 +106,7 @@ final class Plugin
                 return $meta;
             }
 
-            $meta[] = '<a href="' . esc_url('https://wiki.kenzi.chat/integrations/wordpress/') . '">' . __('Docs', 'kenzi-chat') . '</a>';
+            $meta[] = '<a href="' . esc_url('https://wiki.kenzi.chat/integrations/wordpress/') . '">' . esc_html__('Docs', 'kenzi-chat') . '</a>';
 
             return $meta;
         }, 10, 2);
