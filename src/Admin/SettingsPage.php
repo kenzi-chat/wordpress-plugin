@@ -95,6 +95,8 @@ final class SettingsPage
             'settingsUrl' => admin_url('admin.php?page=' . self::PAGE_SLUG),
             'isConnected' => Settings::isConnected(),
             'hasWooCommerce' => in_array('commerce', $supportedGrants, true),
+            'widgetEnabled' => Settings::isWidgetEnabled(),
+            'widgetNonce' => wp_create_nonce('kenzi_save_widget_settings'),
             'i18n' => [
                 'popupBlocked' => __('Popup was blocked. Please allow popups for this site.', 'kenzi-chat'),
                 'confirmDisconnect' => __('Disconnect from Kenzi? This will remove the workspace connection.', 'kenzi-chat'),
@@ -109,6 +111,10 @@ final class SettingsPage
                 'enableCommerce' => __('Enable Commerce', 'kenzi-chat'),
                 'unreachable' => __('Could not reach Kenzi. Please try again later.', 'kenzi-chat'),
                 'connectionReset' => __('Your Kenzi connection was reset. Please reconnect.', 'kenzi-chat'),
+                'widgetLabel' => __('Show Kenzi chat widget on all pages', 'kenzi-chat'),
+                'widgetHint' => __('When enabled, the chat widget appears on all pages.', 'kenzi-chat'),
+                'widgetHintDisabled' => __('Connect to Kenzi first to enable the widget.', 'kenzi-chat'),
+                'saveChanges' => __('Save Changes', 'kenzi-chat'),
             ],
         ]);
     }
@@ -121,9 +127,6 @@ final class SettingsPage
         if (! current_user_can('manage_options')) {
             return;
         }
-
-        $isConnected = Settings::isConnected();
-        $widgetEnabled = Settings::isWidgetEnabled();
 
         // Transient-based notices — deleted after first read to prevent stale display.
         $notice = get_transient('kenzi_chat_notice');
@@ -141,52 +144,9 @@ final class SettingsPage
                 </div>
             <?php endif; ?>
 
-            <h2><?php esc_html_e('Connection', 'kenzi-chat'); ?></h2>
-            <table class="form-table">
-                <tr>
-                    <th scope="row"><?php esc_html_e('Workspace', 'kenzi-chat'); ?></th>
-                    <td>
-                        <div id="kenzi-connection">
-                            <p class="description"><?php esc_html_e('Loading…', 'kenzi-chat'); ?></p>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-
-            <h2><?php esc_html_e('Widget Settings', 'kenzi-chat'); ?></h2>
-            <form method="post" action="">
-                <?php wp_nonce_field('kenzi_save_widget_settings', '_kenzi_widget_nonce'); ?>
-                <input type="hidden" name="kenzi_save_widget" value="1">
-                <table class="form-table">
-                    <tr>
-                        <th scope="row"><?php esc_html_e('Enable Widget', 'kenzi-chat'); ?></th>
-                        <td>
-                            <label>
-                                <input type="checkbox"
-                                       name="widget_enabled"
-                                       value="1"
-                                       <?php checked($widgetEnabled); ?>
-                                       <?php disabled(! $isConnected); ?>>
-                                <?php esc_html_e('Show Kenzi chat widget on all pages', 'kenzi-chat'); ?>
-                            </label>
-                            <p class="description">
-                                <?php if (! $isConnected): ?>
-                                    <span class="kenzi-widget-disabled-hint">
-                                        <?php esc_html_e('Connect to Kenzi first to enable the widget.', 'kenzi-chat'); ?>
-                                    </span>
-                                <?php else: ?>
-                                    <?php esc_html_e('When enabled, the chat widget appears on all pages.', 'kenzi-chat'); ?>
-                                <?php endif; ?>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-                <p class="submit">
-                    <button type="submit" class="button button-primary">
-                        <?php esc_html_e('Save Changes', 'kenzi-chat'); ?>
-                    </button>
-                </p>
-            </form>
+            <div id="kenzi-settings">
+                <p class="description"><?php esc_html_e('Loading…', 'kenzi-chat'); ?></p>
+            </div>
         </div>
         <?php
     }

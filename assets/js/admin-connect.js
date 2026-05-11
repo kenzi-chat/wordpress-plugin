@@ -22,6 +22,10 @@
   // Reference to the popup window, held at module scope for source checks.
   let popupRef = null;
 
+  // Root element — all state renders target this container.
+  const root = document.getElementById("kenzi-settings");
+  if (!root) return;
+
   /**
    * Call a plugin REST endpoint.
    *
@@ -106,7 +110,7 @@
 
     restCall("POST", "/kenzi/disconnect").then(function (result) {
       if (result.ok) {
-        renderConnectButton(document.getElementById("kenzi-connection"));
+        renderConnectButton();
       } else {
         alert(config.i18n.disconnectFailed);
       }
@@ -123,21 +127,18 @@
    * pipe any of them through here to update the page in place.
    */
   function renderConnection(result) {
-    const el = document.getElementById("kenzi-connection");
-    if (!el) return;
-
     // HTTP error dispatch (§9.2).
     if (!result.ok) {
       if (result.status === 401 || result.status === 403 || result.status === 404) {
         // Best-effort: clear local state. Render connect button regardless
         // of disconnect outcome — the user can reconnect either way.
         restCall("POST", "/kenzi/disconnect").then(function () {
-          renderConnectButton(el, config.i18n.connectionReset);
+          renderConnectButton(config.i18n.connectionReset);
         });
         return;
       }
       // 502/504/network — transient error.
-      renderConnectButton(el, config.i18n.unreachable);
+      renderConnectButton(config.i18n.unreachable);
       return;
     }
 
@@ -145,14 +146,14 @@
 
     // Two-state dispatch: connected (configured + claimed) or error.
     if (integration.configured === true && integration.claimed === true) {
-      renderSettings(el, integration);
+      renderSettings(integration);
     } else {
-      renderError(el);
+      renderError();
     }
   }
 
-  function renderConnectButton(el, errorMessage) {
-    let html = "";
+  function renderConnectButton(errorMessage) {
+    let html = "<h2>Connection</h2>";
 
     if (errorMessage) {
       html +=
@@ -175,24 +176,29 @@
       "</span>" +
       "</button>";
 
-    el.innerHTML = html;
+    root.innerHTML = html + widgetSection(false);
   }
 
-  function renderError(el) {
-    el.innerHTML =
+  function renderError() {
+    root.innerHTML =
+      "<h2>Connection</h2>" +
       '<div class="notice notice-warning inline"><p>' +
       esc(config.i18n.somethingWrong) +
       "</p></div>" +
       '<button type="button" class="button kenzi-btn-disconnect" onclick="kenziDisconnect()">' +
       esc(config.i18n.disconnect) +
-      "</button>";
+      "</button>" +
+      widgetSection(false);
   }
 
-  function renderSettings(el, data) {
+  function renderSettings(data) {
     const workspaceName =
       data.claim && data.claim.workspace ? data.claim.workspace.name : "Kenzi";
 
     let html =
+      "<h2>Connection</h2>" +
+      '<table class="form-table"><tr>' +
+      '<th scope="row">Workspace</th><td>' +
       '<p class="kenzi-status-connected">' +
       '<span class="dashicons dashicons-yes-alt"></span> ' +
       esc(config.i18n.connectedTo.replace("%s", workspaceName)) +
@@ -221,9 +227,33 @@
     html +=
       '<button type="button" class="button kenzi-btn-disconnect" onclick="kenziDisconnect()">' +
       esc(config.i18n.disconnect) +
-      "</button>";
+      "</button>" +
+      "</td></tr></table>";
 
-    el.innerHTML = html;
+    root.innerHTML = html + widgetSection(true);
+  }
+
+  function widgetSection(connected) {
+    const disabled = connected ? "" : " disabled";
+    const checked = config.widgetEnabled ? " checked" : "";
+    const hint = connected ? config.i18n.widgetHint : config.i18n.widgetHintDisabled;
+
+    return "<h2>Widget Settings</h2>" +
+      '<form method="post" action="">' +
+      '<input type="hidden" name="_kenzi_widget_nonce" value="' + esc(config.widgetNonce) + '">' +
+      '<input type="hidden" name="kenzi_save_widget" value="1">' +
+      '<table class="form-table"><tr>' +
+      '<th scope="row">' + esc(config.i18n.widgetLabel) + '</th><td>' +
+      "<label>" +
+      '<input type="checkbox" name="widget_enabled" value="1"' + checked + disabled + "> " +
+      esc(config.i18n.widgetLabel) +
+      "</label>" +
+      '<p class="description">' + esc(hint) + "</p>" +
+      "</td></tr></table>" +
+      '<p class="submit">' +
+      '<button type="submit" class="button button-primary"' + disabled + ">" +
+      esc(config.i18n.saveChanges) +
+      "</button></p></form>";
   }
 
   function esc(str) {
@@ -234,20 +264,11 @@
 
   // -- Page load: fetch integration state and render --
 
-  function initConnectionState() {
-    const el = document.getElementById("kenzi-connection");
-    if (!el) return;
-
-    if (!config.isConnected) {
-      // No secret in local config — render ConnectButton immediately.
-      renderConnectButton(el);
-      return;
-    }
-
+  if (!config.isConnected) {
+    renderConnectButton();
+  } else {
     restCall("GET", "/kenzi/integration").then(renderConnection);
   }
-
-  initConnectionState();
 
   // -- postMessage listener (§5.3) --
 
@@ -280,13 +301,10 @@
     popupRef = null;
 
     // Show spinner while the connect + configure calls run.
-    const el = document.getElementById("kenzi-connection");
-    if (el) {
-      el.innerHTML =
-        '<p><span class="spinner is-active" style="float:none;margin:0 4px 0 0"></span>' +
-        esc(config.i18n.connecting) +
-        "</p>";
-    }
+    root.innerHTML =
+      '<p><span class="spinner is-active" style="float:none;margin:0 4px 0 0"></span>' +
+      esc(config.i18n.connecting) +
+      "</p>";
 
     // §5.4: Hand off to local controllers — connect then configure.
     restCall("POST", "/kenzi/connect", {
@@ -296,7 +314,7 @@
     })
       .then(function (result) {
         if (!result.ok) {
-          if (el) renderError(el);
+          renderError();
           return;
         }
 
@@ -309,7 +327,7 @@
         renderConnection(result);
       })
       .catch(function () {
-        if (el) renderError(el);
+        renderError();
       });
   });
 })();
