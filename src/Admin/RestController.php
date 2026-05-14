@@ -148,7 +148,7 @@ final class RestController
 
         // Base config — always present regardless of grants.
         $config = [
-            'api_url' => home_url('/wp-json'),
+            'rest_url' => rest_url(),
             'admin_url' => admin_url(),
         ];
 
