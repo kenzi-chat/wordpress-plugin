@@ -164,6 +164,7 @@ final class RestController
          * @param array<string, mixed> $config The config payload.
          * @return array<string, mixed>|WP_Error
          */
+        /** @var array<string, mixed>|WP_Error $config */
         $config = apply_filters('kenzi_configure_config', $config);
 
         if (is_wp_error($config)) {
