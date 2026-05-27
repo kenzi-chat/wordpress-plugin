@@ -9,6 +9,8 @@ use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
 
+defined('ABSPATH') || exit;
+
 /**
  * REST API controller for Kenzi Chat plugin endpoints.
  *

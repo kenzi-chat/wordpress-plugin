@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kenzi\Chat;
 
+defined('ABSPATH') || exit;
+
 /**
  * Main plugin class.
  *

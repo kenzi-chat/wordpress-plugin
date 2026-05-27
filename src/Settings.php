@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Kenzi\Chat;
 
+defined('ABSPATH') || exit;
+
 /**
  * Settings helper for Kenzi Chat plugin options.
  *
@@ -122,8 +124,8 @@ final class Settings
     {
         $url = home_url();
 
-        return strtolower(parse_url($url, PHP_URL_HOST) ?? '')
-             . rtrim(parse_url($url, PHP_URL_PATH) ?? '', '/');
+        return strtolower(wp_parse_url($url, PHP_URL_HOST) ?? '')
+             . rtrim(wp_parse_url($url, PHP_URL_PATH) ?? '', '/');
     }
 
     /**

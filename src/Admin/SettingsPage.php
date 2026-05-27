@@ -6,6 +6,8 @@ namespace Kenzi\Chat\Admin;
 
 use Kenzi\Chat\Settings;
 
+defined('ABSPATH') || exit;
+
 /**
  * Admin settings page for Kenzi Chat.
  *
@@ -106,7 +108,9 @@ final class SettingsPage
                 'connecting' => __('Connecting…', 'kenzi-chat'),
                 'connectPrompt' => __('Connect your site to a Kenzi workspace to enable chat.', 'kenzi-chat'),
                 'connectButton' => __('Connect to Kenzi', 'kenzi-chat'),
+                /* translators: %s: Kenzi workspace name */
                 'connectedTo' => __('Connected to %s', 'kenzi-chat'),
+                /* translators: %s: status string returned by the Kenzi API */
                 'unknownStatus' => __('Kenzi reports status: %s. See documentation.', 'kenzi-chat'),
                 'enableCommerce' => __('Enable Commerce', 'kenzi-chat'),
                 'unreachable' => __('Could not reach Kenzi. Please try again later.', 'kenzi-chat'),

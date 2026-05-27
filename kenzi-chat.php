@@ -26,7 +26,8 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Kenzi\Chat\Plugin;
 
-add_action('plugins_loaded', static function (): void {
+// `init` (not `plugins_loaded`) — keeps all our __() calls strictly post-init to silence the WP 6.7+ JIT load notice.
+add_action('init', static function (): void {
     Plugin::instance()->init();
 });
 

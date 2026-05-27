@@ -27,8 +27,10 @@ cp kenzi-chat.php readme.txt LICENSE composer.json "$DEST/"
 # Install production autoloader (no dev dependencies)
 composer install --no-dev --optimize-autoloader --no-interaction --quiet --working-dir="$DEST"
 
-# Remove composer artefacts that aren't needed at runtime
-rm -f "$DEST/composer.json" "$DEST/composer.lock"
+# Drop composer.lock (not needed at runtime). Keep composer.json so the
+# shipped vendor/ directory has its descriptor — Plugin Check's
+# missing_composer_json_file rule requires it whenever vendor/ is present.
+rm -f "$DEST/composer.lock"
 
 # Create the ZIP
 (cd "$BUILD_DIR" && zip -rq "$OLDPWD/$ZIP_NAME" "$SLUG")
