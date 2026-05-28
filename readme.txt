@@ -8,18 +8,29 @@ Stable tag: 1.0.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Add the Kenzi chat widget to your WordPress site for customer messaging.
+Bring customer messages, order details, and conversation history together in one shared inbox.
 
 == Description ==
 
-Kenzi Chat connects your WordPress site to the Kenzi customer messaging platform. Add a chat widget to your site so customers can reach your support team instantly.
+Kenzi is a customer support platform for teams that want every customer conversation in one place. Bring together live chat, email, Facebook Messenger, and Instagram DMs in a shared Kenzi inbox so your team can see what needs attention, respond faster, and keep support organized.
+
+The Kenzi Chat plugin connects your WordPress site to Kenzi and adds the live chat experience to your site, so visitors can reach your team from the same place they browse.
 
 **Features:**
 
-* One-click workspace connection via secure OAuth flow
-* Chat widget injection on all pages
-* Easy enable/disable toggle in Settings
-* Developer-friendly base URL configuration for staging/local environments
+* Add Kenzi live chat to your WordPress website
+* See customer support conversations from live chat, email, Facebook Messenger, and Instagram in one inbox
+* View customer details, order info, and previous conversations alongside each chat
+* Organize, filter, and save custom inbox views
+* Work together with your support team in a shared workspace
+* Install in about a minute with no code required
+* As easy to use as texting
+
+== External services ==
+
+Kenzi Chat connects to the Kenzi customer messaging service at `https://app.kenzi.chat` when an administrator connects, configures, disconnects, or checks the integration status for this plugin.
+
+When the site is connected to Kenzi and the widget setting is enabled, the plugin loads the chat widget loader script from `https://static.kenzi.chat/widget/loader.js` with the connected workspace ID in the request URL. This script is loaded on frontend pages to render the Kenzi chat widget and allow visitors to message the site's Kenzi workspace.
 
 == Installation ==
 
@@ -34,6 +45,10 @@ Kenzi Chat connects your WordPress site to the Kenzi customer messaging platform
 = How do I connect my site? =
 
 Go to Settings > Kenzi Chat and click "Connect to Kenzi". A popup will open where you can sign in and select your workspace.
+
+= Do I need a Kenzi account? =
+
+Yes. This plugin connects your WordPress site to a Kenzi workspace, where your team manages customer conversations. Kenzi includes live chat, email, Facebook Messenger, and Instagram messaging in one shared inbox.
 
 = How do I change the Kenzi server URL for development? =
 
